@@ -287,7 +287,6 @@ impl<
 
         // Only schedule our recv buffers coroutine when receive window hits zero.
         if t.control_flow.borrow().remaining_receive_windows() < (WINDOW_SIZE / 2) as u64 {
-            // if t.control_flow.borrow().remaining_receive_windows() == 0 {
             Self::schedule(&mut t.recv_buffers_coroutine);
         }
         Self::schedule(&mut t.completions_coroutine);

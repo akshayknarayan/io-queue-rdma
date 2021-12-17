@@ -3,16 +3,16 @@ name = "io-queue-rdma"
 version = "0.1.0"
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-rdma-cm = {git = "https://github.com/demikernel/rdma-cm"}
+rdma-cm = {git = "https://github.com/akshayknarayan/rdma-cm", branch = "async", features = ["async"]}
+#rdma-cm = { path = "../rdma-cm", features = ["async"] }
 tracing = "0.1.26"
-nix = "0.21"
+nix = "0.23"
 arrayvec = "0.7.1"
 futures = "0.3.16"
 async-channel = "1.6.1"
 hashbrown = "0.3"
+tokio = { version = "1", features = ["rt"] }
 
 [dev-dependencies]
 structopt = { version = "0.3", default-features = false }

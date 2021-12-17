@@ -62,7 +62,7 @@ fn main() {
     match opt.mode {
         Mode::Server => {
             let mut io_queue =
-                IoQueue::<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE>::new();
+                IoQueue::<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE, true>::new();
             let mut listening_qd = io_queue.socket();
 
             io_queue
@@ -90,7 +90,7 @@ fn main() {
         }
         Mode::Client => {
             let mut io_queue =
-                IoQueue::<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE>::new();
+                IoQueue::<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE, true>::new();
             let mut connection = io_queue.socket();
             io_queue.connect(&mut connection, &opt.ip_address, &opt.port);
 

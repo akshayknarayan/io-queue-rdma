@@ -47,6 +47,11 @@ fn main() {
         .without_time()
         .init();
 
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+
     match options {
         Options::Server { ip_address, port } => {
             let address = format!("{}:{}", ip_address, port);
@@ -54,7 +59,7 @@ fn main() {
 
             let mut server =
                 Server::<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE>::new(address);
-            server.run();
+            rt.block_on(server.run())
         }
         Options::Client {
             ip_address,
@@ -62,12 +67,13 @@ fn main() {
             bufsize,
             nflows,
         } => {
-            let mut c = Client::<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE>::new(
-                bufsize,
-                &ip_address,
-                &port,
-                nflows,
-            );
+            let mut c = rt.block_on(Client::<
+                RECV_WRS,
+                SEND_WRS,
+                CQ_ELEMENTS,
+                WINDOW_SIZE,
+                BUFFER_SIZE,
+            >::new(bufsize, &ip_address, &port, nflows));
             c.client()
         }
     }
@@ -81,8 +87,8 @@ struct Server<
     const BUFFER_SIZE: usize,
 > {
     stats: Statistics,
-    listening_qd: QueueDescriptor<true>,
-    libos: IoQueue<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE, true>,
+    listening_qd: QueueDescriptor<false>,
+    libos: IoQueue<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, BUFFER_SIZE, false>,
 }
 
 impl<
@@ -96,9 +102,9 @@ impl<
     pub fn new(socket_address: SocketAddr) -> Self {
         let address = SockAddr::new_inet(InetAddr::from_std(&socket_address));
 
-        let mut libos = IoQueue::new();
+        let mut libos = IoQueue::new().set_async();
         // Setup connection.
-        let mut listening_qd: QueueDescriptor<true> = libos.socket();
+        let mut listening_qd: QueueDescriptor<false> = libos.socket();
         libos.bind(&mut listening_qd, &address).unwrap();
         libos.listen(&mut listening_qd);
 
@@ -109,9 +115,9 @@ impl<
         }
     }
 
-    pub fn run(&mut self) {
+    pub async fn run(&mut self) {
         let mut qtokens: Vec<QueueToken> = Vec::with_capacity(10000);
-        let mut connected_qd = self.libos.accept(&mut self.listening_qd);
+        let mut connected_qd = self.libos.accept(&mut self.listening_qd).await;
 
         // let mut bufsize: usize = 0;
         // let mut start: Instant = Instant::now();
@@ -165,10 +171,10 @@ struct Client<
     const N: usize,
 > {
     stats: Statistics,
-    qd: QueueDescriptor<true>,
+    qd: QueueDescriptor<false>,
     nflows: usize,
     bufsize: usize,
-    libos: IoQueue<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, N, true>,
+    libos: IoQueue<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, N, false>,
     nextpkt: u64,
 }
 
@@ -180,14 +186,14 @@ impl<
         const N: usize,
     > Client<RECV_WRS, SEND_WRS, CQ_ELEMENTS, WINDOW_SIZE, N>
 {
-    pub fn new(bufsize: usize, address: &str, port: &str, nflows: usize) -> Self {
+    pub async fn new(bufsize: usize, address: &str, port: &str, nflows: usize) -> Self {
         println!("buffer size {:?}, number of flows {:?}", bufsize, nflows);
 
         // Setup connection.
-        let mut libos = IoQueue::new();
-        let mut connection: QueueDescriptor<true> = libos.socket();
+        let mut libos = IoQueue::new().set_async();
+        let mut connection: QueueDescriptor<false> = libos.socket();
 
-        libos.connect(&mut connection, &address, &port);
+        libos.connect(&mut connection, &address, &port).await;
 
         Self {
             stats: Statistics::new("client"),

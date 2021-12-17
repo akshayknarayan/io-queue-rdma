@@ -51,7 +51,7 @@ fn main() {
 
     match opt.mode {
         Mode::Server => {
-            let mut io_queue = IoQueue::<2048, 256, 32, 1024, 1024>::new();
+            let mut io_queue = IoQueue::<2048, 256, 32, 1024, 1024, true>::new();
             let mut listening_qd = io_queue.socket();
 
             io_queue
@@ -71,7 +71,7 @@ fn main() {
             println!("Server got: {:?}", buffer.as_mut_slice(1)[0]);
         }
         Mode::Client => {
-            let mut io_queue = IoQueue::<2048, 256, 32, 1024, 1024>::new();
+            let mut io_queue = IoQueue::<2048, 256, 32, 1024, 1024, true>::new();
             let mut connection = io_queue.socket();
             io_queue.connect(&mut connection, &opt.ip_address, &opt.port);
 
