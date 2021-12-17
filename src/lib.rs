@@ -208,7 +208,9 @@ impl<
     pub fn socket(&self) -> QueueDescriptor<true> {
         info!("{}", function_name!());
 
-        let cm = rdma_cm::CommunicationManager::new().expect("TODO");
+        let cm = rdma_cm::CommunicationManagerBuilder::default()
+            .build()
+            .expect("TODO");
 
         QueueDescriptor {
             cm,
@@ -356,10 +358,10 @@ impl<
     pub fn socket(&self) -> QueueDescriptor<false> {
         info!("{}", function_name!());
 
-        let cm = rdma_cm::CommunicationManager::new()
-            .expect("TODO")
+        let cm = rdma_cm::CommunicationManagerBuilder::default()
             .async_cm_events()
-            .unwrap();
+            .build()
+            .expect("TODO");
 
         QueueDescriptor {
             cm,
