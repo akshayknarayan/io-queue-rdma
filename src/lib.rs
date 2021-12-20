@@ -21,6 +21,13 @@ pub struct QueueDescriptor<const BLOCKING: bool> {
     cm: rdma_cm::CommunicationManager<BLOCKING>,
     // TODO a better API could avoid having these as options
     scheduler_handle: Option<TaskHandle>,
+    remote_address: Option<u64>,
+}
+
+impl<const B: bool> QueueDescriptor<B> {
+    pub fn get_remote_address(&self) -> Option<u64> {
+        self.remote_address
+    }
 }
 
 pub struct IoQueue<
@@ -215,6 +222,7 @@ impl<
         QueueDescriptor {
             cm,
             scheduler_handle: None,
+            remote_address: None,
         }
     }
 
@@ -336,6 +344,7 @@ impl<
         QueueDescriptor {
             cm: connected_id,
             scheduler_handle: Some(scheduler_handle),
+            remote_address: Some(client_private_data.get_remote_address()),
         }
     }
 
@@ -366,6 +375,7 @@ impl<
         QueueDescriptor {
             cm,
             scheduler_handle: None,
+            remote_address: None,
         }
     }
 
@@ -412,6 +422,7 @@ impl<
             peer,
         );
         qd.scheduler_handle = Some(self.executor.add_new_connection(cf, qp, pd, cq));
+        qd.remote_address = Some(peer.get_remote_address());
     }
 
     async fn resolve_address(qd: &mut QueueDescriptor<false>, node: &str, service: &str) {
@@ -485,6 +496,7 @@ impl<
         QueueDescriptor {
             cm: connected_id,
             scheduler_handle: Some(scheduler_handle),
+            remote_address: Some(client_private_data.get_remote_address()),
         }
     }
 }

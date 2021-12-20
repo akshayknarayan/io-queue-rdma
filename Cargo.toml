@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-rdma-cm = {git = "https://github.com/akshayknarayan/rdma-cm", branch = "async", features = ["async"]}
+rdma-cm = {git = "https://github.com/akshayknarayan/rdma-cm", branch = "main", features = ["async"]}
 #rdma-cm = { path = "../rdma-cm", features = ["async"] }
 tracing = "0.1.26"
 nix = "0.23"
